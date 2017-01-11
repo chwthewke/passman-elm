@@ -1,10 +1,14 @@
 module Types exposing (..)
 
-type alias Model = 
-    { key: String
-    , masterPassword: String
-    , variant: Int }
+import Form.Types as Form
+import Generators.Types as Generators
 
-type Msg = SetKey            String
-         | SetMasterPassword String
-         | SetVariant        String
+-- TODO elm-monocle lenses for glue models?
+
+type alias Model = 
+    { form : Form.Model
+    , generators: Generators.Model
+    }
+
+type Msg = FormMsg        Form.Msg
+         | GeneratorsMsg  Generators.Msg
