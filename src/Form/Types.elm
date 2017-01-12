@@ -12,3 +12,4 @@ type Msg
     = SetKey String
     | SetMasterPassword String
     | SetVariant String
+    | SubmitForm
