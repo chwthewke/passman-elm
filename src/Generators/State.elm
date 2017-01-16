@@ -1,4 +1,4 @@
-module Generators.State exposing (init, update)
+module Generators.State exposing (init, update, updateForm)
 
 import Debug
 import Common.Updates as Updates
@@ -28,6 +28,10 @@ update msg =
         SetIncludeLegacy includeLegacy ->
             setIncludeLegacy includeLegacy
 
+        -- TODO
+        FormSubmit formModel ->
+            Updates.none
+
 
 setGenerators generators model =
     ( { model | generators = generators }, Cmd.none )
@@ -41,11 +45,11 @@ setIncludeLegacy includeLegacy model =
     ( { model | includeLegacy = includeLegacy }, queryEngineConfig includeLegacy )
 
 
-updateEx : ( Form.Msg, Form.Model ) -> Model -> ( Model, Cmd Msg )
-updateEx ( fmsg, _ ) =
+updateForm : ( Form.Msg, Form.Model ) -> Maybe Msg
+updateForm ( fmsg, fmod ) =
     case fmsg of
         Form.Submit ->
-            Updates.none
+            Just <| FormSubmit fmod
 
         _ ->
-            Updates.none
+            Nothing

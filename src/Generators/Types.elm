@@ -1,6 +1,7 @@
 module Generators.Types exposing (..)
 
 import Http
+import Form.Types as Form
 
 
 type alias Model =
@@ -21,3 +22,4 @@ type Msg
     | ApiError Http.Error
       -- TODO show? also, top-level and/or common type
     | SetIncludeLegacy Bool
+    | FormSubmit Form.Model
