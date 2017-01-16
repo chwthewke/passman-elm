@@ -1,16 +1,30 @@
 module Form.State exposing (init, update)
 
 import Char
+import Common.Updates as Updates
 import Form.Types exposing (..)
 
 
 init : ( Model, Cmd msg )
 init =
-    ( { key = "", masterPassword = "", variant = 1 }, Cmd.none )
+    ( initRaw, Cmd.none ) |> updateValidation
+
+
+initRaw : Model
+initRaw =
+    { key = ""
+    , masterPassword = ""
+    , variant = 1
+    , validationError = Nothing
+    }
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg =
+    updateSelf msg >> updateValidation
+
+
+updateSelf msg =
     case msg of
         SetKey key ->
             setKey key
@@ -21,8 +35,8 @@ update msg =
         SetVariant variant ->
             setVariant variant
 
-        SubmitForm ->
-            \model -> ( model, Maybe.withDefault Cmd.none (Maybe.map (\_ -> Cmd.none) (validateForm model)) )
+        Submit ->
+            Updates.none
 
 
 setKey : String -> Model -> ( Model, Cmd msg )
@@ -49,14 +63,6 @@ setVariant variant model =
         ( model1, Cmd.none )
 
 
-submitForm : Model -> ( Model, Cmd Msg )
-submitForm model =
-    ( model
-      -- replace the first Cmd.none with message to generators
-    , Maybe.withDefault Cmd.none << Maybe.map (always Cmd.none) <| (validateForm model)
-    )
-
-
 validateForm : Model -> Maybe String
 validateForm { key, masterPassword, variant } =
     let
@@ -76,7 +82,7 @@ validateForm { key, masterPassword, variant } =
             (String.map Char.toUpper <| String.left 1 s) ++ String.dropLeft 1 s
 
         errs =
-            List.filterMap (identity)
+            List.filterMap identity
                 [ notBlank "name must not be blank" key
                 , notBlank "master password must not be blank" masterPassword
                 , posInt "variant must be positive" variant
@@ -87,4 +93,13 @@ validateForm { key, masterPassword, variant } =
                 Maybe.Nothing
 
             h :: t ->
-                Just << capitalize <| List.foldl (\s r -> s ++ ", " ++ r) h t
+                Just << capitalize <| List.foldl (\r s -> s ++ ", " ++ r) h t
+
+
+updateValidation : ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateValidation ( model, cmd ) =
+    let
+        validationError =
+            validateForm model
+    in
+        ( { model | validationError = validationError }, cmd )

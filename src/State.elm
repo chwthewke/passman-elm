@@ -35,3 +35,7 @@ update msg model =
                     Generators.update gm model.generators
             in
                 ( { model | generators = generators }, Cmd.map GeneratorsMsg cmd )
+
+
+
+-- updateEx : Msg -> Model -> ( Model, Cmd Msg )

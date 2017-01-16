@@ -3,12 +3,14 @@ module Form.View exposing (root)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Evt
+import Common.Maybe exposing (..)
+import Common.Views exposing (..)
 import Form.Types exposing (..)
 
 
 root : Model -> Html Msg
 root model =
-    Html.div [] [ header, form model ]
+    Html.div [] [ header, form model, submitButton model.validationError ]
 
 
 header : Html Msg
@@ -24,11 +26,6 @@ form model =
             , field "Master password" <| masterPasswordInput model.masterPassword
             , field "Variant" <| variantInput model.variant
             ]
-
-
-field : String -> Html msg -> Html msg
-field label input =
-    Html.label [] [ Html.text label, input ]
 
 
 keyInput : String -> Html Msg
@@ -67,3 +64,11 @@ variantInput variant =
             ]
     in
         Html.input attrs []
+
+
+submitButton : Maybe String -> Html Msg
+submitButton validationError =
+    Html.div []
+        [ Html.button [ Attr.disabled (isDefined validationError) ] [ Html.text "Submit" ]
+        , Html.text <| Maybe.withDefault "" validationError
+        ]
