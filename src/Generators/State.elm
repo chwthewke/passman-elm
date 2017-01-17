@@ -1,4 +1,4 @@
-module Generators.State exposing (init, update, updateForm)
+module Generators.State exposing (init, update, formHook)
 
 import Debug
 import Common.Updates as Updates
@@ -45,8 +45,8 @@ setIncludeLegacy includeLegacy model =
     ( { model | includeLegacy = includeLegacy }, queryEngineConfig includeLegacy )
 
 
-updateForm : ( Form.Msg, Form.Model ) -> Maybe Msg
-updateForm ( fmsg, fmod ) =
+formHook : Form.Model -> Form.Msg -> Maybe Msg
+formHook fmod fmsg =
     case fmsg of
         Form.Submit ->
             Just <| FormSubmit fmod

@@ -3,6 +3,7 @@ module Types exposing (..)
 import Monocle.Lens exposing (Lens)
 import Form.Types as Form
 import Generators.Types as Generators
+import Common.Updates exposing (Component, component)
 
 
 -- TODO elm-monocle lenses for glue models?
@@ -14,14 +15,14 @@ type alias Model =
     }
 
 
-formModel : Lens Model Form.Model
-formModel =
-    Lens .form (\f m -> { m | form = f })
+formComponent : Component Model Msg Form.Model Form.Msg
+formComponent =
+    component .form (\f m -> { m | form = f }) FormMsg
 
 
-generatorsModel : Lens Model Generators.Model
-generatorsModel =
-    Lens .generators (\g m -> { m | generators = g })
+generatorsComponent : Component Model Msg Generators.Model Generators.Msg
+generatorsComponent =
+    component .generators (\g m -> { m | generators = g }) GeneratorsMsg
 
 
 type Msg

@@ -1,4 +1,17 @@
-module Common.Updates exposing (StateCmd, IxUpdate, Update, none, fold, updatePart, foreignUpdate)
+module Common.Updates
+    exposing
+        ( Component
+        , CrossComponent
+        , StateCmd
+        , IxUpdate
+        , Update
+        , none
+        , fold
+        , component
+        , updateComponent
+        , updateCrossComponent
+        , updateCross
+        )
 
 import Monocle.Lens exposing (Lens)
 import Tuple exposing (mapSecond)
@@ -42,18 +55,60 @@ sequence ups m =
                 mapSecond ((::) cmd) (sequence us m1)
 
 
-updatePart :
-    Lens wholeModel partModel
-    -> (partMsg -> wholeMsg)
-    -> IxUpdate inputMsg partModel partMsg
-    -> IxUpdate inputMsg wholeModel wholeMsg
-updatePart lens liftMsg partUpdate msg model =
-    model
+type alias Component s sm a am =
+    { lens : Lens s a
+    , lift : am -> sm
+    }
+
+
+component : (s -> a) -> (a -> s -> s) -> (am -> sm) -> Component s sm a am
+component get set lift =
+    Component (Lens get set) lift
+
+
+updateComponent :
+    Component s sm a am
+    -> IxUpdate i a am
+    -> IxUpdate i s sm
+updateComponent { lens, lift } up i m =
+    m
         |> lens.get
-        >> partUpdate msg
-        >> Tuple.bimap (flip lens.set model) (Cmd.map liftMsg)
+        >> up i
+        >> Tuple.bimap (flip lens.set m) (Cmd.map lift)
 
 
-foreignUpdate : (i -> Maybe o) -> Update o m -> IxUpdate i m o
-foreignUpdate select update input =
-    foldMaybe (always none) update (select input)
+type alias CrossComponent s sm a am b bm =
+    { source : Component s sm a am
+    , target : Component s sm b bm
+    , hook : a -> am -> Maybe bm
+    }
+
+
+
+-- This is lurking underneath
+--type alias ComponentHook s sm a am i =
+--    { component : Component s sm a am
+--    , hook : i -> s -> Maybe am
+--    }
+
+
+updateCrossComponent :
+    CrossComponent s sm a am b bm
+    -> Update bm b
+    -> IxUpdate am s sm
+updateCrossComponent { source, target, hook } =
+    updateCross source target hook
+
+
+updateCross :
+    Component s sm a am
+    -> Component s sm b bm
+    -> (a -> am -> Maybe i)
+    -> IxUpdate i b bm
+    -> IxUpdate am s sm
+updateCross ca cb select up am s =
+    let
+        im =
+            select (ca.lens.get s) am
+    in
+        foldMaybe (always none) (updateComponent cb up) im s
