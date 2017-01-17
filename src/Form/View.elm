@@ -69,6 +69,10 @@ variantInput variant =
 submitButton : Maybe String -> Html Msg
 submitButton validationError =
     Html.div []
-        [ Html.button [ Attr.disabled (isDefined validationError) ] [ Html.text "Submit" ]
+        [ Html.button
+            [ Attr.disabled (isDefined validationError)
+            , Evt.onClick Submit
+            ]
+            [ Html.text "Submit" ]
         , Html.text <| Maybe.withDefault "" validationError
         ]

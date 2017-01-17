@@ -1,5 +1,6 @@
 module Generators.View exposing (root)
 
+import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Evt
@@ -11,7 +12,7 @@ root : Model -> Html Msg
 root model =
     Html.div []
         [ includeLegacyControl model.includeLegacy
-        , generatorsView model.generators
+        , generatorsView model.passwords model.generators
         ]
 
 
@@ -28,7 +29,7 @@ includeLegacyControl includeLegacy =
 generatorView generator password =
     Html.div []
         [ Html.span [] [ Html.text generator.name ]
-        , Html.span [] [ Html.text "" ]
+        , Html.span [] [ Html.text <| Maybe.withDefault "" password ]
         ]
 
 
@@ -36,5 +37,10 @@ generatorView generator password =
 -- TODO include derived passwords
 
 
-generatorsView generators =
-    Html.div [] <| List.map (\g -> generatorView g "") generators
+generatorsView passwordsById generators =
+    Html.div [] <| List.map (uncurry generatorView << generatorWithPassword passwordsById) generators
+
+
+generatorWithPassword : Dict String String -> Generator -> ( Generator, Maybe String )
+generatorWithPassword passwordsById generator =
+    ( generator, Dict.get generator.id passwordsById )

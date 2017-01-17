@@ -1,6 +1,6 @@
 module Generators.State exposing (init, update, formHook)
 
-import Debug
+import Dict
 import Common.Updates as Updates
 import Form.Types as Form
 import Generators.Types exposing (..)
@@ -13,7 +13,7 @@ init =
 
 
 initWithLegacy legacy =
-    ( { generators = [], includeLegacy = legacy }, queryEngineConfig legacy )
+    ( { generators = [], includeLegacy = legacy, passwords = Dict.empty }, queryEngineConfig legacy )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -29,8 +29,21 @@ update msg =
             setIncludeLegacy includeLegacy
 
         -- TODO
-        FormSubmit formModel ->
-            Updates.none
+        FormSubmit form ->
+            restRequestPasswords form.key form.masterPassword form.variant
+
+        UpdatePasswords passwords ->
+            updatePasswords passwords
+
+
+formHook : Form.Model -> Form.Msg -> Maybe Msg
+formHook fmod fmsg =
+    case fmsg of
+        Form.Submit ->
+            Just <| FormSubmit fmod
+
+        _ ->
+            Nothing
 
 
 setGenerators generators model =
@@ -45,11 +58,13 @@ setIncludeLegacy includeLegacy model =
     ( { model | includeLegacy = includeLegacy }, queryEngineConfig includeLegacy )
 
 
-formHook : Form.Model -> Form.Msg -> Maybe Msg
-formHook fmod fmsg =
-    case fmsg of
-        Form.Submit ->
-            Just <| FormSubmit fmod
+restRequestPasswords key masterPassword variant model =
+    ( model, requestPasswords key masterPassword variant model.includeLegacy )
 
-        _ ->
-            Nothing
+
+updatePasswords derivedPasswords model =
+    let
+        passwordsDict =
+            Dict.fromList (List.map (\p -> ( p.generatorId, p.value )) derivedPasswords)
+    in
+        ( { model | passwords = passwordsDict }, Cmd.none )
